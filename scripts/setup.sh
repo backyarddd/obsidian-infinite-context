@@ -10,7 +10,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo -e "${BLUE}╔══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  Obsidian Infinite Context — Setup           ║${NC}"
+echo -e "${BLUE}║  Obsidian Infinite Context  - Setup           ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -164,7 +164,7 @@ project: {{name}}
 created: {{date}}
 updated: {{date}}
 ---
-# {{name}} — Master Memory
+# {{name}}  - Master Memory
 
 ## Overview
 
@@ -243,11 +243,11 @@ echo -e "${BLUE}║  Setup Complete!                             ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 echo "Usage in Claude Code:"
-echo "  /obsidian-memory recall    — Load project context"
-echo "  /obsidian-memory save      — Save current context"
-echo "  /obsidian-memory search X  — Search all memory"
-echo "  /obsidian-memory keys list — List API keys"
-echo "  /obsidian-memory log       — Quick session log"
-echo "  /obsidian-memory status    — Memory overview"
+echo "  /obsidian-memory recall     - Load project context"
+echo "  /obsidian-memory save       - Save current context"
+echo "  /obsidian-memory search X   - Search all memory"
+echo "  /obsidian-memory keys list  - List API keys"
+echo "  /obsidian-memory log        - Quick session log"
+echo "  /obsidian-memory status     - Memory overview"
 echo ""
 echo "Claude will also auto-save/recall as needed."

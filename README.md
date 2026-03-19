@@ -2,9 +2,9 @@
 
 > Never lose context again. Give Claude Code a permanent, fully automatic memory backed by your Obsidian vault.
 
-Claude Code's context window is finite — when it fills up, older conversation history gets compacted or lost. This skill gives Claude a **persistent, searchable long-term memory** stored as Markdown files in your Obsidian vault. It works **completely automatically** — no manual commands needed. Every preference, decision, mistake, API key, and session is saved and recalled without you lifting a finger.
+Claude Code's context window is finite  - when it fills up, older conversation history gets compacted or lost. This skill gives Claude a **persistent, searchable long-term memory** stored as Markdown files in your Obsidian vault. It works **completely automatically**  - no manual commands needed. Every preference, decision, mistake, API key, and session is saved and recalled without you lifting a finger.
 
-## What It Does — Automatically
+## What It Does  - Automatically
 
 | Trigger | What Claude Does | Where It's Stored |
 |---------|-----------------|-------------------|
@@ -49,7 +49,7 @@ Your Obsidian Vault/
             └── ...
 ```
 
-Everything is plain Markdown with YAML frontmatter — fully browsable and searchable in Obsidian.
+Everything is plain Markdown with YAML frontmatter  - fully browsable and searchable in Obsidian.
 
 ---
 
@@ -105,7 +105,7 @@ mkdir -p ~/.claude/skills/obsidian-memory
 cp skills/obsidian-memory/SKILL.md ~/.claude/skills/obsidian-memory/SKILL.md
 ```
 
-**2. Set your vault path** — pick ONE of these methods:
+**2. Set your vault path**  - pick ONE of these methods:
 
 **Method A: Config file** (recommended)
 ```bash
@@ -157,7 +157,7 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-> **Note:** If you already have a `settings.json`, merge the hook into your existing config — don't overwrite the file.
+> **Note:** If you already have a `settings.json`, merge the hook into your existing config  - don't overwrite the file.
 
 ---
 
@@ -209,13 +209,13 @@ Next conversation, Claude already knows the key without you sharing it again. Di
 
 ## Browsing in Obsidian
 
-All memory files are standard Markdown — open your vault and browse to `Claude-Memory/`:
+All memory files are standard Markdown  - open your vault and browse to `Claude-Memory/`:
 
-- **Search** — find anything across all sessions
-- **Graph view** — see connections between notes via wikilinks
-- **Tags** — filter by `#error`, `#decision`, `#preference`, `#key`
-- **Edit directly** — Claude picks up your changes
-- **Dataview** plugin — advanced queries across your memory
+- **Search**  - find anything across all sessions
+- **Graph view**  - see connections between notes via wikilinks
+- **Tags**  - filter by `#error`, `#decision`, `#preference`, `#key`
+- **Edit directly**  - Claude picks up your changes
+- **Dataview** plugin  - advanced queries across your memory
 
 ---
 
@@ -255,7 +255,7 @@ Set `OBSIDIAN_VAULT_PATH` per-project in your shell config. The skill writes to 
 | "No vault path found" | Run setup script, create config file manually, or set `OBSIDIAN_VAULT_PATH` env var |
 | Skill not showing up | Verify `~/.claude/skills/obsidian-memory/SKILL.md` exists, restart Claude Code |
 | Files not in Obsidian | Make sure `Claude-Memory/` is inside vault root (not `.obsidian/`) |
-| Keys not being saved | Say the key explicitly in conversation — Claude detects patterns like `sk-...`, `pk_...` |
+| Keys not being saved | Say the key explicitly in conversation  - Claude detects patterns like `sk-...`, `pk_...` |
 
 ---
 
@@ -291,7 +291,7 @@ Contributions welcome! Ideas:
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT  - see [LICENSE](LICENSE).
 
 ---
 

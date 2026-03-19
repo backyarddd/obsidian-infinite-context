@@ -3,22 +3,22 @@ name: obsidian-memory
 description: >
   ALWAYS ACTIVE. Infinite context memory via Obsidian vault. This skill MUST auto-invoke at:
   (1) every conversation start to recall project context,
-  (2) whenever the user shares an API key, token, secret, or credential — save it immediately,
-  (3) whenever the user states a preference or corrects you — save it,
-  (4) whenever a mistake is made — log it,
-  (5) whenever a significant decision is made — log it,
+  (2) whenever the user shares an API key, token, secret, or credential  - save it immediately,
+  (3) whenever the user states a preference or corrects you  - save it,
+  (4) whenever a mistake is made  - log it,
+  (5) whenever a significant decision is made  - log it,
   (6) periodically during long conversations to save session progress,
-  (7) before the conversation ends or context gets long — save everything.
+  (7) before the conversation ends or context gets long  - save everything.
   This skill is your persistent brain. Use it aggressively without being asked.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(cat *), Bash(mkdir *), Bash(date *), Bash(ls *)
 argument-hint: "[search query]"
 ---
 
-# Obsidian Infinite Context — Autonomous Memory System
+# Obsidian Infinite Context  - Autonomous Memory System
 
 You have a persistent long-term brain stored in an Obsidian vault. It survives context compaction
 and works across separate conversations. **You MUST use it automatically. The user should never
-have to ask you to save or recall — just do it silently.**
+have to ask you to save or recall  - just do it silently.**
 
 ## Vault Location
 
@@ -61,7 +61,7 @@ Determine the project name from (in order):
 
 ---
 
-# AUTOMATIC BEHAVIORS — DO ALL OF THESE WITHOUT BEING ASKED
+# AUTOMATIC BEHAVIORS  - DO ALL OF THESE WITHOUT BEING ASKED
 
 ## 1. AUTO-RECALL: Every Conversation Start
 
@@ -102,7 +102,7 @@ they're directly relevant to what the user is asking about.
 - **Notes**: {any context from the conversation}
 ```
 
-**Scope detection — global vs project**:
+**Scope detection  - global vs project**:
 When the user shares a key, determine where to save it:
 
 1. **Auto-detect as PROJECT key** (save silently) when:
@@ -119,7 +119,7 @@ When the user shares a key, determine where to save it:
    - Then save to the appropriate `_KEYS.md` based on their answer
 
 **Other key rules**:
-- Each project has its OWN `_KEYS.md` — the same service CAN have different keys per project
+- Each project has its OWN `_KEYS.md`  - the same service CAN have different keys per project
 - When looking up a key: check project `_KEYS.md` first, then global `_KEYS.md`
 - If a key already exists for that service in this project, UPDATE it (don't duplicate)
 - Briefly confirm: "Saved your [service] key to Obsidian ({scope})."
@@ -137,7 +137,7 @@ When the user shares a key, determine where to save it:
 - Include WHY if the user gave a reason
 - If a preference contradicts an existing one, replace the old one
 
-**Do NOT ask** "Should I save this?" — just save it silently. If it's notable, briefly
+**Do NOT ask** "Should I save this?"  - just save it silently. If it's notable, briefly
 confirm: "Noted, I'll remember that."
 
 ## 4. AUTO-LOG ERRORS: Whenever a Mistake Happens
@@ -152,7 +152,7 @@ confirm: "Noted, I'll remember that."
 **Action**: Append to `projects/{project}/_ERRORS.md`:
 
 ```markdown
-## {YYYY-MM-DD} — {short description}
+## {YYYY-MM-DD}  - {short description}
 **What happened**: {description}
 **Root cause**: {why it happened}
 **Fix**: {how it was fixed}
@@ -171,7 +171,7 @@ confirm: "Noted, I'll remember that."
 **Action**: Append to `projects/{project}/_DECISIONS.md`:
 
 ```markdown
-## {YYYY-MM-DD} — {decision title}
+## {YYYY-MM-DD}  - {decision title}
 **Decision**: {what was decided}
 **Alternatives considered**: {what else was considered}
 **Reasoning**: {why this choice}
@@ -224,10 +224,10 @@ topic: {main topic}
 ```
 
 **Rules for session logs**:
-- Never store full file contents — just paths and summaries
+- Never store full file contents  - just paths and summaries
 - One log per major topic/task, not per message
 - Focus on WHAT and WHY, not play-by-play
-- The "Context for Next Session" section is the most important — write it as if briefing
+- The "Context for Next Session" section is the most important  - write it as if briefing
   a colleague who will pick up your work tomorrow
 
 ## 7. AUTO-SAVE ON CONTEXT PRESSURE: Before Things Get Lost
@@ -236,13 +236,13 @@ topic: {main topic}
 context that hasn't been saved yet.
 
 **Action**: Proactively write a session log + update `_PROJECT.md` with anything new.
-Don't announce this — just do it quietly. If asked, you can mention you saved progress.
+Don't announce this  - just do it quietly. If asked, you can mention you saved progress.
 
 ---
 
 # MANUAL COMMANDS (when user invokes /obsidian-memory directly)
 
-### `/obsidian-memory` (no args) — Status Overview
+### `/obsidian-memory` (no args)  - Status Overview
 Show: all projects, last session date, key counts, memory file sizes.
 
 ### `/obsidian-memory search [query]`
@@ -276,7 +276,7 @@ project: {name}
 created: {date}
 updated: {date}
 ---
-# {Project Name} — Master Memory
+# {Project Name}  - Master Memory
 
 ## Overview
 {what this project is}
@@ -303,7 +303,7 @@ updated: {date}
 project: {name}
 updated: {date}
 ---
-# API Keys — {Project Name}
+# API Keys  - {Project Name}
 
 ## {Service Name}
 - **Key**: `{api-key}`
@@ -317,15 +317,15 @@ updated: {date}
 
 # IMPORTANT RULES
 
-1. **Be silent about most saves** — don't narrate every write. Brief confirmations only for keys and major saves.
-2. **Always append** to `_ERRORS.md` and `_DECISIONS.md` — never overwrite old entries.
-3. **API keys are per-project by default** — same service CAN have different keys per project.
+1. **Be silent about most saves**  - don't narrate every write. Brief confirmations only for keys and major saves.
+2. **Always append** to `_ERRORS.md` and `_DECISIONS.md`  - never overwrite old entries.
+3. **API keys are per-project by default**  - same service CAN have different keys per project.
 4. **Check project keys first**, then fall back to global.
 5. **Use Obsidian wikilinks** (`[[note name]]`) when cross-referencing.
 6. **Add YAML frontmatter** to every file.
 7. **Use tags** liberally (`#error`, `#decision`, `#preference`, `#key`) for searchability.
 8. **Create directories** with `mkdir -p` before writing if they don't exist.
 9. **Date format**: YYYY-MM-DD for dates, HH-MM for times in filenames.
-10. **Keep session logs focused** — one per major topic, not one per message.
-11. **Never store full file contents** in logs — just paths and change summaries.
-12. **The user should never have to tell you to save** — if something is worth remembering, save it.
+10. **Keep session logs focused**  - one per major topic, not one per message.
+11. **Never store full file contents** in logs  - just paths and change summaries.
+12. **The user should never have to tell you to save**  - if something is worth remembering, save it.
