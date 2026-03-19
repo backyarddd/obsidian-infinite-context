@@ -1,21 +1,36 @@
 # Obsidian Infinite Context for Claude Code
 
-> Never lose context again. Give Claude Code a permanent memory backed by your Obsidian vault.
+> Never lose context again. Give Claude Code a permanent, fully automatic memory backed by your Obsidian vault.
 
-Claude Code's context window is finite — when it fills up, older conversation history gets compacted or lost. This skill gives Claude a **persistent, searchable long-term memory** stored as Markdown files in your Obsidian vault. Every preference, decision, mistake, and session is saved and can be recalled at any time — across conversations, across days, across projects.
+Claude Code's context window is finite — when it fills up, older conversation history gets compacted or lost. This skill gives Claude a **persistent, searchable long-term memory** stored as Markdown files in your Obsidian vault. It works **completely automatically** — no manual commands needed. Every preference, decision, mistake, API key, and session is saved and recalled without you lifting a finger.
 
-## What It Does
+## What It Does — Automatically
 
-- **Master Memory** — Per-project file storing preferences, patterns, architecture notes, and anything Claude needs to remember permanently
-- **Per-Project API Keys** — Store different API keys for the same service across different projects (e.g., Stripe test key for Project A, Stripe prod key for Project B)
-- **Session Logs** — Automatic logging of what was discussed, decided, built, and left unfinished
-- **Error Journal** — Every mistake Claude makes gets logged with the fix and lesson learned, so it never repeats
-- **Decision Log** — Technical decisions with full reasoning, so future sessions understand *why* things are the way they are
-- **Auto-Recall** — Claude loads project context at the start of every conversation
-- **Full Search** — Search across all memory files for any topic
-- **Obsidian-Native** — Everything is plain Markdown with YAML frontmatter, wikilinks, and tags — fully browsable in Obsidian
+| Trigger | What Claude Does | Where It's Stored |
+|---------|-----------------|-------------------|
+| **New conversation starts** | Recalls all project context silently | reads `_PROJECT.md`, `_ERRORS.md`, `_DECISIONS.md`, `_KEYS.md`, recent sessions |
+| **You share an API key** | Saves it to the current project immediately | `projects/{name}/_KEYS.md` |
+| **You correct Claude or state a preference** | Saves the preference so it never forgets | `_GLOBAL.md` or `_PROJECT.md` |
+| **Claude makes a mistake** | Logs the error, root cause, and lesson learned | `projects/{name}/_ERRORS.md` |
+| **A technical decision is made** | Logs the decision with full reasoning | `projects/{name}/_DECISIONS.md` |
+| **After completing a task** | Writes a session log with full context | `projects/{name}/sessions/` |
+| **Conversation getting long** | Proactively saves before context is lost | session log + project updates |
 
-## How It Works
+**You never have to tell Claude to save or remember anything. It just does it.**
+
+## Per-Project API Keys
+
+The same service can have **different keys in different projects**:
+
+```
+Project A (my-saas-app)     →  Stripe: sk_live_abc123
+Project B (side-project)    →  Stripe: sk_test_xyz789
+Global fallback             →  OpenAI: sk-global-key
+```
+
+Just paste a key in conversation and Claude saves it to the right project. When it needs a key later, it checks the current project first, then falls back to global.
+
+## Vault Structure
 
 ```
 Your Obsidian Vault/
@@ -34,7 +49,7 @@ Your Obsidian Vault/
             └── ...
 ```
 
-Claude reads and writes to these files using standard file operations. No plugins, no servers, no APIs — just your vault folder.
+Everything is plain Markdown with YAML frontmatter — fully browsable and searchable in Obsidian.
 
 ---
 
@@ -51,7 +66,7 @@ Claude reads and writes to these files using standard file operations. No plugin
 **1. Clone this repository:**
 
 ```bash
-git clone https://github.com/davo-codes/obsidian-infinite-context.git
+git clone https://github.com/backyarddd/obsidian-infinite-context.git
 cd obsidian-infinite-context
 ```
 
@@ -73,47 +88,28 @@ The setup script will:
 - Create the `Claude-Memory/` folder structure in your vault
 - Install the skill to `~/.claude/skills/obsidian-memory/`
 - Save your vault path to `~/.claude/obsidian-memory.json`
-- Optionally set up a session-start hook
+- Set up a session-start hook for automatic recall
 
 **3. Restart Claude Code** (or start a new session).
 
-**4. Test it:**
-```
-/obsidian-memory status
-```
+**4. That's it.** Claude will automatically recall context on the next conversation. To verify, just ask: *"What do you remember about this project?"*
 
 ---
 
 ### Option 2: Manual Installation
 
-If you prefer to set things up yourself:
-
 **1. Copy the skill file:**
 
 ```bash
-# Create the skill directory
 mkdir -p ~/.claude/skills/obsidian-memory
-
-# Copy SKILL.md from this repo
 cp skills/obsidian-memory/SKILL.md ~/.claude/skills/obsidian-memory/SKILL.md
 ```
 
-**2. Edit the vault path in the skill file:**
+**2. Set your vault path** — pick ONE of these methods:
 
-Open `~/.claude/skills/obsidian-memory/SKILL.md` and replace `$OBSIDIAN_VAULT_PATH` with your actual vault path:
-
-```
-# Find this line:
-The Obsidian vault is at: `$OBSIDIAN_VAULT_PATH`
-
-# Replace with your path:
-The Obsidian vault is at: `/Users/you/Documents/My Vault`
-```
-
-**3. Create the config file:**
-
+**Method A: Config file** (recommended)
 ```bash
-# Create the config
+mkdir -p ~/.claude
 cat > ~/.claude/obsidian-memory.json << 'EOF'
 {
   "vaultPath": "/path/to/your/obsidian/vault",
@@ -124,7 +120,15 @@ cat > ~/.claude/obsidian-memory.json << 'EOF'
 EOF
 ```
 
-**4. Create the vault structure:**
+**Method B: Edit SKILL.md directly**
+Open `~/.claude/skills/obsidian-memory/SKILL.md` and replace `$OBSIDIAN_VAULT_PATH` with your vault path.
+
+**Method C: Environment variable**
+```bash
+export OBSIDIAN_VAULT_PATH="/path/to/your/vault"
+```
+
+**3. Create the vault structure:**
 
 ```bash
 VAULT="/path/to/your/obsidian/vault"
@@ -132,10 +136,9 @@ mkdir -p "$VAULT/Claude-Memory/projects"
 mkdir -p "$VAULT/Claude-Memory/templates"
 ```
 
-**5. (Optional) Add session-start hook:**
+**4. (Optional) Add session-start hook** for an extra recall reminder:
 
-Add this to your `~/.claude/settings.json` (create the file if it doesn't exist):
-
+Add to `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
@@ -145,7 +148,7 @@ Add this to your `~/.claude/settings.json` (create the file if it doesn't exist)
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[OBSIDIAN MEMORY] Use /obsidian-memory recall to load project context'"
+            "command": "echo '[OBSIDIAN MEMORY] Auto-recalling project context from Obsidian vault...'"
           }
         ]
       }
@@ -154,73 +157,65 @@ Add this to your `~/.claude/settings.json` (create the file if it doesn't exist)
 }
 ```
 
-> **Note:** If you already have a `settings.json`, merge the hook into your existing `hooks.SessionStart` array — don't overwrite the file.
+> **Note:** If you already have a `settings.json`, merge the hook into your existing config — don't overwrite the file.
 
 ---
 
 ### Option 3: One-Liner Install
 
-If you just want to get going fast:
-
 ```bash
-git clone https://github.com/davo-codes/obsidian-infinite-context.git && cd obsidian-infinite-context && bash scripts/setup.sh
+git clone https://github.com/backyarddd/obsidian-infinite-context.git && cd obsidian-infinite-context && bash scripts/setup.sh
 ```
 
 ---
 
 ## Usage
 
-### Manual Commands
+### It's Automatic
+
+Once installed, you don't need to do anything. Claude will:
+
+1. **Load context** at the start of every conversation
+2. **Save API keys** the moment you share them
+3. **Remember preferences** when you correct it or state one
+4. **Log mistakes** so they don't repeat
+5. **Record decisions** with reasoning for future reference
+6. **Write session logs** at natural stopping points
+
+### Manual Commands (Optional)
+
+You can still invoke the skill manually if needed:
 
 | Command | Description |
 |---------|-------------|
-| `/obsidian-memory recall` | Load all context for current project |
-| `/obsidian-memory save` | Save current conversation context |
+| `/obsidian-memory` | Show status overview of all projects |
 | `/obsidian-memory search [query]` | Search across all memory files |
-| `/obsidian-memory log` | Quick session log (lightweight save) |
-| `/obsidian-memory keys list` | List all API keys across projects |
-| `/obsidian-memory keys set [service] [key]` | Set an API key for current project |
-| `/obsidian-memory keys get [service]` | Get an API key (project-first, then global) |
-| `/obsidian-memory keys global set [service] [key]` | Set a global API key |
-| `/obsidian-memory status` | Show memory overview across all projects |
 
-### Auto-Behavior
+### API Keys in Practice
 
-Claude will also use the memory system automatically:
-- **Recalls context** at the start of conversations
-- **Saves important info** when it learns something new (preferences, corrections)
-- **Logs mistakes** in the error journal when things go wrong
-- **Records decisions** when architectural choices are made
-- **Proactively saves** before context gets too long
+Just share keys naturally in conversation:
 
-### API Keys — Per-Project
+> "Here's my Stripe key: sk_test_abc123"
 
-The key feature: **different API keys for the same service across projects**.
+Claude automatically:
+1. Detects the key
+2. Identifies the service (Stripe)
+3. Saves it to the current project's `_KEYS.md`
+4. Confirms briefly: *"Saved your Stripe key to Obsidian."*
 
-```
-# In project "my-saas-app":
-/obsidian-memory keys set stripe sk_live_abc123
-
-# In project "side-project":
-/obsidian-memory keys set stripe sk_test_xyz789
-
-# Global fallback:
-/obsidian-memory keys global set openai sk-global-key
-```
-
-When Claude looks up a key, it checks the current project first, then falls back to global.
+Next conversation, Claude already knows the key without you sharing it again. Different projects get different keys.
 
 ---
 
 ## Browsing in Obsidian
 
-All memory files are standard Markdown — open Obsidian and browse to `Claude-Memory/` to see everything. You can:
+All memory files are standard Markdown — open your vault and browse to `Claude-Memory/`:
 
-- Use Obsidian's **search** to find anything across all sessions
-- Use **graph view** to see connections between notes (via wikilinks)
-- Use **tags** (`#error`, `#decision`, `#preference`) to filter
-- Edit files directly — Claude will pick up your changes
-- Use **Dataview** plugin for advanced queries across your memory
+- **Search** — find anything across all sessions
+- **Graph view** — see connections between notes via wikilinks
+- **Tags** — filter by `#error`, `#decision`, `#preference`, `#key`
+- **Edit directly** — Claude picks up your changes
+- **Dataview** plugin — advanced queries across your memory
 
 ---
 
@@ -228,7 +223,7 @@ All memory files are standard Markdown — open Obsidian and browse to `Claude-M
 
 ### Config File
 
-The config lives at `~/.claude/obsidian-memory.json`:
+`~/.claude/obsidian-memory.json`:
 
 ```json
 {
@@ -241,40 +236,26 @@ The config lives at `~/.claude/obsidian-memory.json`:
 
 ### Environment Variable
 
-You can also set the vault path via environment variable:
-
 ```bash
 export OBSIDIAN_VAULT_PATH="/path/to/your/vault"
 ```
 
-This takes priority over the config file.
+Takes priority over the config file.
 
 ### Multiple Vaults
 
-If you use multiple Obsidian vaults, set `OBSIDIAN_VAULT_PATH` per-project in your shell config or use the config file. The skill always writes to one vault at a time.
+Set `OBSIDIAN_VAULT_PATH` per-project in your shell config. The skill writes to one vault at a time.
 
 ---
 
 ## Troubleshooting
 
-### "No vault path found"
-- Run the setup script again, or
-- Create `~/.claude/obsidian-memory.json` manually with your vault path, or
-- Set the `OBSIDIAN_VAULT_PATH` environment variable
-
-### Skill not showing up
-- Make sure `~/.claude/skills/obsidian-memory/SKILL.md` exists
-- Restart Claude Code
-- Try `/obsidian-memory status` to test
-
-### Files not appearing in Obsidian
-- Check that `Claude-Memory/` is inside your vault root (not in `.obsidian/`)
-- Obsidian auto-detects new files — they should appear within seconds
-
-### Context still getting lost
-- Make sure you `save` before long conversations
-- Use `/obsidian-memory recall` at the start of new sessions
-- The session-start hook helps automate this
+| Problem | Solution |
+|---------|----------|
+| "No vault path found" | Run setup script, create config file manually, or set `OBSIDIAN_VAULT_PATH` env var |
+| Skill not showing up | Verify `~/.claude/skills/obsidian-memory/SKILL.md` exists, restart Claude Code |
+| Files not in Obsidian | Make sure `Claude-Memory/` is inside vault root (not `.obsidian/`) |
+| Keys not being saved | Say the key explicitly in conversation — Claude detects patterns like `sk-...`, `pk_...` |
 
 ---
 
@@ -282,29 +263,29 @@ If you use multiple Obsidian vaults, set `OBSIDIAN_VAULT_PATH` per-project in yo
 
 ```
 obsidian-infinite-context/
-├── README.md                           # This file
-├── LICENSE                             # MIT License
+├── README.md
+├── LICENSE
 ├── .gitignore
 ├── skills/
 │   └── obsidian-memory/
-│       └── SKILL.md                    # The Claude Code skill
+│       └── SKILL.md            # The Claude Code skill (this is the brain)
 └── scripts/
-    ├── setup.sh                        # Setup for macOS/Linux/Git Bash
-    └── setup.ps1                       # Setup for Windows PowerShell
+    ├── setup.sh                # Setup for macOS / Linux / Git Bash
+    └── setup.ps1               # Setup for Windows PowerShell
 ```
 
 ---
 
 ## Contributing
 
-Contributions welcome! Some ideas:
+Contributions welcome! Ideas:
 
 - [ ] MCP server wrapper for richer Obsidian integration
-- [ ] Auto-compaction hook that saves before context is lost
 - [ ] Obsidian plugin companion for browsing Claude memory
 - [ ] Multi-vault support
 - [ ] Memory export/import between machines
-- [ ] Encryption for sensitive API keys
+- [ ] Encryption for sensitive API keys at rest
+- [ ] Auto-tagging and categorization of session logs
 
 ---
 
@@ -314,4 +295,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-Built for the Claude Code community. If this helps you, star the repo!
+Built for the Claude Code community. If this saves your context, star the repo!

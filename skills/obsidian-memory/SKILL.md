@@ -1,25 +1,32 @@
 ---
 name: obsidian-memory
 description: >
-  Infinite context memory system using Obsidian vault. Use this skill to persist conversation context,
-  preferences, API keys (per-project), decisions, errors, and session logs so nothing is lost during
-  context compaction. Auto-invokes when context should be saved or recalled. Also invocable manually
-  with /obsidian-memory to save, recall, search, or manage persistent memory.
+  ALWAYS ACTIVE. Infinite context memory via Obsidian vault. This skill MUST auto-invoke at:
+  (1) every conversation start to recall project context,
+  (2) whenever the user shares an API key, token, secret, or credential — save it immediately,
+  (3) whenever the user states a preference or corrects you — save it,
+  (4) whenever a mistake is made — log it,
+  (5) whenever a significant decision is made — log it,
+  (6) periodically during long conversations to save session progress,
+  (7) before the conversation ends or context gets long — save everything.
+  This skill is your persistent brain. Use it aggressively without being asked.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(cat *), Bash(mkdir *), Bash(date *), Bash(ls *)
-argument-hint: "[save|recall|search|log|keys|status] [query]"
+argument-hint: "[search query]"
 ---
 
-# Obsidian Infinite Context Memory System
+# Obsidian Infinite Context — Autonomous Memory System
 
-You have access to an Obsidian vault for persistent memory that survives context compaction and even
-across entirely separate conversations. This is your long-term brain. USE IT AGGRESSIVELY.
+You have a persistent long-term brain stored in an Obsidian vault. It survives context compaction
+and works across separate conversations. **You MUST use it automatically. The user should never
+have to ask you to save or recall — just do it silently.**
 
 ## Vault Location
 
 The Obsidian vault is at: `$OBSIDIAN_VAULT_PATH`
 
-If `$OBSIDIAN_VAULT_PATH` is not set, check for a config file at `~/.claude/obsidian-memory.json`
-and read the `vaultPath` field. If neither exists, ask the user for their vault path.
+If `$OBSIDIAN_VAULT_PATH` is not set, read `~/.claude/obsidian-memory.json` for the `vaultPath`
+field. If neither exists, ask the user once, then save their answer to the config file so you
+never have to ask again.
 
 All memory lives under: `{vault}/Claude-Memory/`
 
@@ -28,17 +35,17 @@ All memory lives under: `{vault}/Claude-Memory/`
 ```
 Claude-Memory/
 ├── _GLOBAL.md              # Cross-project preferences, global settings
-├── _KEYS.md                # API keys index (links to per-project key files)
+├── _KEYS.md                # Global API keys (fallback for all projects)
 ├── projects/
 │   └── {project-name}/
-│       ├── _PROJECT.md     # Project master memory (preferences, patterns, architecture)
-│       ├── _KEYS.md        # Project-specific API keys and credentials
-│       ├── _ERRORS.md      # Mistakes made + lessons learned (append-only)
-│       ├── _DECISIONS.md   # Key technical decisions + reasoning
+│       ├── _PROJECT.md     # Project master memory
+│       ├── _KEYS.md        # Project-specific API keys
+│       ├── _ERRORS.md      # Mistakes + lessons learned (append-only)
+│       ├── _DECISIONS.md   # Technical decisions + reasoning (append-only)
 │       ├── sessions/
-│       │   └── {YYYY-MM-DD}_{HH-MM}_{topic}.md  # Session logs
+│       │   └── {YYYY-MM-DD}_{HH-MM}_{topic}.md
 │       └── notes/
-│           └── {topic}.md  # Standalone reference notes
+│           └── {topic}.md
 └── templates/
     ├── session.md
     └── project.md
@@ -47,84 +54,188 @@ Claude-Memory/
 ## Project Name Detection
 
 Determine the project name from (in order):
-1. The current working directory basename
+1. Current working directory basename
 2. `package.json` name field
 3. `.git` remote origin name
-4. Ask the user
+4. Ask the user (then save it so you never ask again)
 
-## Commands
+---
 
-When invoked with `/obsidian-memory`, check the first argument:
+# AUTOMATIC BEHAVIORS — DO ALL OF THESE WITHOUT BEING ASKED
 
-### `save` — Save Current Context
-Write a session log capturing:
-- What was discussed and decided
-- Code changes made (file paths + summaries, not full code)
-- Problems encountered and how they were solved
-- Any preferences or patterns discovered
-- Update `_PROJECT.md` if new persistent info was learned
-- Update `_ERRORS.md` if mistakes were made
-- Update `_DECISIONS.md` if key decisions were made
+## 1. AUTO-RECALL: Every Conversation Start
 
-### `recall` — Load Context for Current Project
-Read and present:
-1. `_GLOBAL.md` for cross-project preferences
-2. `_PROJECT.md` for project-specific memory
-3. `_ERRORS.md` to avoid past mistakes
-4. `_DECISIONS.md` for architectural context
-5. Latest 2-3 session logs for recent work context
-6. `_KEYS.md` for available API keys
+**When**: First message of any conversation.
+**Action**: Silently read all project memory and internalize it:
 
-### `search [query]` — Search All Memory
-Use Grep to search across all files in `Claude-Memory/` for the query.
-Present results grouped by file with context.
+1. Read `~/.claude/obsidian-memory.json` to get vault path
+2. Read `_GLOBAL.md` for cross-project preferences
+3. Read `projects/{project}/_PROJECT.md` for project memory
+4. Read `projects/{project}/_ERRORS.md` to avoid past mistakes
+5. Read `projects/{project}/_DECISIONS.md` for architectural context
+6. Read `projects/{project}/_KEYS.md` for API keys
+7. Read the latest 3 session logs from `projects/{project}/sessions/`
+8. If the project folder doesn't exist yet, create it with empty template files
 
-### `log` — Quick Session Log
-Write a quick session log without the full save workflow. Just capture what happened.
+**How to present**: Don't dump all the memory at the user. Just internalize it and say
+something brief like "Loaded project context from Obsidian." Only mention specifics if
+they're directly relevant to what the user is asking about.
 
-### `keys [action]` — Manage API Keys
-Actions:
-- `keys list` — Show all keys across all projects
-- `keys set [service] [key]` — Set a key for current project
-- `keys get [service]` — Get a key for current project
-- `keys global set [service] [key]` — Set a global key
-Keys are stored in `_KEYS.md` files with this format:
+## 2. AUTO-SAVE API KEYS: Whenever a Key Appears
+
+**When**: The user shares ANY of these in conversation:
+- API keys (e.g., `sk-...`, `pk_...`, `key_...`)
+- Tokens (bearer tokens, access tokens, refresh tokens)
+- Secrets (client secrets, webhook secrets)
+- Credentials (usernames + passwords for services)
+- Connection strings (database URLs, Redis URLs)
+- Environment variable values that contain credentials
+
+**Action**: IMMEDIATELY save to the project's `_KEYS.md`:
 
 ```markdown
 ## {Service Name}
-- **Key**: `{api-key}`
-- **Environment**: {production|staging|development}
-- **Added**: {date}
-- **Notes**: {any notes}
+- **Key**: `{the-key}`
+- **Type**: {api-key|token|secret|credential|connection-string}
+- **Environment**: {production|staging|development|unknown}
+- **Added**: {YYYY-MM-DD}
+- **Notes**: {any context from the conversation}
 ```
 
-Each project has its OWN `_KEYS.md`. The same service (e.g., OpenAI, Stripe) can have
-DIFFERENT keys in different projects. When looking up a key, check project-level first,
-then fall back to global.
+**Rules for API keys**:
+- Each project has its OWN `_KEYS.md` — the same service CAN have different keys per project
+- When looking up a key: check project `_KEYS.md` first, then global `_KEYS.md`
+- If the user says "use this for all projects", save to global `_KEYS.md`
+- If a key already exists for that service in this project, UPDATE it (don't duplicate)
+- Briefly confirm: "Saved your [service] key to Obsidian."
 
-### `status` — Show Memory Status
-List all projects, their last session date, and memory file sizes.
+## 3. AUTO-SAVE PREFERENCES: Whenever the User Corrects or Instructs
 
-## Auto-Behavior (When Claude Decides to Invoke)
+**When**: The user says things like:
+- "Don't do X" / "Stop doing X" / "I prefer Y" / "Always use Z"
+- "I like when you..." / "Never..." / "From now on..."
+- Any correction to your behavior or output
+- Any stated preference about code style, communication, tools, etc.
 
-Claude should auto-invoke this skill in these situations:
+**Action**: Update `_GLOBAL.md` (if cross-project) or `_PROJECT.md` (if project-specific):
+- Add the preference under the appropriate section
+- Include WHY if the user gave a reason
+- If a preference contradicts an existing one, replace the old one
 
-1. **Start of conversation**: Always `recall` at the beginning to load context.
-   Check if there's existing memory for the current project.
+**Do NOT ask** "Should I save this?" — just save it silently. If it's notable, briefly
+confirm: "Noted, I'll remember that."
 
-2. **Before context compaction**: If you sense the context is getting long,
-   proactively `save` important context before it's lost.
+## 4. AUTO-LOG ERRORS: Whenever a Mistake Happens
 
-3. **After learning something important**: When the user corrects you, shares a
-   preference, or you discover a project pattern — save it immediately.
+**When**: Any of these occur:
+- You produce code that fails/errors
+- The user says "no", "wrong", "that's not right", "you broke it"
+- A test fails because of something you did
+- You misunderstand the user's request
+- You repeat a mistake that was already in `_ERRORS.md`
 
-4. **After making a mistake**: Log it in `_ERRORS.md` with the fix so it never
-   happens again.
+**Action**: Append to `projects/{project}/_ERRORS.md`:
 
-5. **After a significant decision**: Log architectural or design decisions with
-   full reasoning in `_DECISIONS.md`.
+```markdown
+## {YYYY-MM-DD} — {short description}
+**What happened**: {description}
+**Root cause**: {why it happened}
+**Fix**: {how it was fixed}
+**Lesson**: {what to do differently next time}
+**Tags**: #error #{category}
+```
 
-## File Formats
+## 5. AUTO-LOG DECISIONS: Whenever a Technical Choice Is Made
+
+**When**:
+- Choosing between frameworks, libraries, or approaches
+- Architectural decisions (database schema, API design, folder structure)
+- The user explains WHY something is done a certain way
+- Trade-offs are discussed and a direction is chosen
+
+**Action**: Append to `projects/{project}/_DECISIONS.md`:
+
+```markdown
+## {YYYY-MM-DD} — {decision title}
+**Decision**: {what was decided}
+**Alternatives considered**: {what else was considered}
+**Reasoning**: {why this choice}
+**Consequences**: {what this means going forward}
+**Tags**: #decision #{category}
+```
+
+## 6. AUTO-LOG SESSIONS: Periodically During Long Conversations
+
+**When**:
+- After completing a significant task or feature
+- After a natural stopping point in the conversation
+- When the conversation is getting long (you've exchanged 20+ messages)
+- When switching to a completely different topic
+- Before the user seems to be wrapping up ("thanks", "that's all", "bye")
+
+**Action**: Create a session log at `projects/{project}/sessions/{YYYY-MM-DD}_{HH-MM}_{topic}.md`:
+
+```markdown
+---
+project: {name}
+date: {YYYY-MM-DD}
+time: {HH:MM}
+topic: {main topic}
+---
+# Session: {topic}
+
+## Summary
+{2-3 sentence overview}
+
+## What Was Done
+- {action 1}
+- {action 2}
+
+## Decisions Made
+- {decision}: {reasoning}
+
+## Problems & Solutions
+- **Problem**: {description}
+  **Solution**: {how it was solved}
+
+## Code Changes
+- `{file path}`: {what changed and why}
+
+## Open Items
+- {anything left unfinished}
+
+## Context for Next Session
+{what the next session needs to know to continue seamlessly}
+```
+
+**Rules for session logs**:
+- Never store full file contents — just paths and summaries
+- One log per major topic/task, not per message
+- Focus on WHAT and WHY, not play-by-play
+- The "Context for Next Session" section is the most important — write it as if briefing
+  a colleague who will pick up your work tomorrow
+
+## 7. AUTO-SAVE ON CONTEXT PRESSURE: Before Things Get Lost
+
+**When**: The conversation has been going for a while and you've accumulated significant
+context that hasn't been saved yet.
+
+**Action**: Proactively write a session log + update `_PROJECT.md` with anything new.
+Don't announce this — just do it quietly. If asked, you can mention you saved progress.
+
+---
+
+# MANUAL COMMANDS (when user invokes /obsidian-memory directly)
+
+### `/obsidian-memory` (no args) — Status Overview
+Show: all projects, last session date, key counts, memory file sizes.
+
+### `/obsidian-memory search [query]`
+Grep across all files in `Claude-Memory/` for the query. Show results grouped by file.
+
+---
+
+# FILE FORMATS
 
 ### _GLOBAL.md
 ```markdown
@@ -181,76 +292,25 @@ updated: {date}
 
 ## {Service Name}
 - **Key**: `{api-key}`
+- **Type**: {api-key|token|secret|credential|connection-string}
 - **Environment**: {production|staging|development}
 - **Added**: {date}
-- **Notes**: {any notes}
-
-## {Another Service}
-- **Key**: `{different-key}`
-- **Environment**: {production}
-- **Added**: {date}
-- **Notes**: {any notes}
+- **Notes**: {context}
 ```
 
-### _ERRORS.md
-```markdown
 ---
-project: {name}
-updated: {date}
----
-# Error Journal — {Project Name}
 
-## {date} — {short description}
-**What happened**: {description}
-**Root cause**: {why it happened}
-**Fix**: {how it was fixed}
-**Lesson**: {what to do differently next time}
-**Tags**: {relevant tags}
-```
+# IMPORTANT RULES
 
-### Session Log
-```markdown
----
-project: {name}
-date: {YYYY-MM-DD}
-time: {HH:MM}
-topic: {main topic}
----
-# Session: {topic}
-
-## Summary
-{2-3 sentence overview}
-
-## What Was Done
-- {action 1}
-- {action 2}
-
-## Decisions Made
-- {decision}: {reasoning}
-
-## Problems & Solutions
-- **Problem**: {description}
-  **Solution**: {how it was solved}
-
-## Code Changes
-- `{file path}`: {what changed and why}
-
-## Open Items
-- {anything left unfinished}
-
-## Context for Next Session
-{what the next session needs to know to continue}
-```
-
-## Important Rules
-
-1. **Never store full file contents** in session logs — just paths and summaries
-2. **Always append** to `_ERRORS.md` and `_DECISIONS.md`, never overwrite
-3. **API keys are per-project by default** — the same service CAN have different keys in different projects
-4. **Check project keys first**, then fall back to global keys
-5. **Use Obsidian wikilinks** (`[[note name]]`) when cross-referencing between files
-6. **Add frontmatter** to every file for Obsidian compatibility
-7. **Use tags** liberally (e.g., `#error`, `#decision`, `#preference`) for searchability
-8. **Create directories** before writing files if they don't exist
-9. **Date format**: Always use YYYY-MM-DD for dates, HH-MM for times in filenames
-10. **Keep session logs focused** — one log per major topic/task, not one per message
+1. **Be silent about most saves** — don't narrate every write. Brief confirmations only for keys and major saves.
+2. **Always append** to `_ERRORS.md` and `_DECISIONS.md` — never overwrite old entries.
+3. **API keys are per-project by default** — same service CAN have different keys per project.
+4. **Check project keys first**, then fall back to global.
+5. **Use Obsidian wikilinks** (`[[note name]]`) when cross-referencing.
+6. **Add YAML frontmatter** to every file.
+7. **Use tags** liberally (`#error`, `#decision`, `#preference`, `#key`) for searchability.
+8. **Create directories** with `mkdir -p` before writing if they don't exist.
+9. **Date format**: YYYY-MM-DD for dates, HH-MM for times in filenames.
+10. **Keep session logs focused** — one per major topic, not one per message.
+11. **Never store full file contents** in logs — just paths and change summaries.
+12. **The user should never have to tell you to save** — if something is worth remembering, save it.
