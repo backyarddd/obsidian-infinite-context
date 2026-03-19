@@ -2,7 +2,13 @@
 
 > Never lose context again. Give Claude Code a permanent, fully automatic memory backed by your Obsidian vault.
 
-Claude Code's context window is finite  - when it fills up, older conversation history gets compacted or lost. This skill gives Claude a **persistent, searchable long-term memory** stored as Markdown files in your Obsidian vault. It works **completely automatically**  - no manual commands needed. Every preference, decision, mistake, API key, and session is saved and recalled without you lifting a finger.
+You're halfway through building a feature. Claude knows your codebase, your preferences, your API keys, the architecture decisions you made two hours ago, and exactly where you left off. Then the context window fills up. Compaction hits. Suddenly Claude doesn't remember any of it. It suggests patterns you already told it not to use. It asks for API keys you already gave it. It makes the same mistake it made an hour ago that you already corrected. You spend the next 20 minutes re-explaining everything just to get back to where you were.
+
+Now multiply that by every session, every day, every project.
+
+This skill fixes that. It gives Claude Code a **persistent, searchable long-term memory** stored as Markdown files in your Obsidian vault. Everything Claude learns  - your preferences, your corrections, your API keys, your architecture decisions, every mistake and its fix  - gets automatically saved to your vault in real time. When context gets compacted or a new session starts, Claude reads it all back and picks up exactly where it left off. No re-explaining. No repeated mistakes. No lost API keys.
+
+It works **completely automatically**. You don't run commands or tell Claude to save. It just does it. It saves before compaction hits, recalls on every new session, logs every error so it never repeats, and even asks you questions instead of assuming when it's not sure. Your Obsidian vault becomes Claude's permanent brain  - one that survives across conversations, across days, across projects.
 
 ## What It Does  - Automatically
 
