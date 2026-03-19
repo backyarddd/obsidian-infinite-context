@@ -15,8 +15,10 @@ Claude Code's context window is finite  - when it fills up, older conversation h
 | **A technical decision is made** | Logs the decision with full reasoning | `projects/{name}/_DECISIONS.md` |
 | **After completing a task** | Writes a session log with full context | `projects/{name}/sessions/` |
 | **Conversation getting long** | Proactively saves before context is lost | session log + project updates |
+| **You say "forget that" or correct old info** | Searches all memory, deletes/corrects it | all memory files |
 
 **You never have to tell Claude to save or remember anything. It just does it.**
+**You can also tell it to forget anything, and it will find and remove it automatically.**
 
 ## Per-Project API Keys
 
@@ -176,11 +178,12 @@ git clone https://github.com/backyarddd/obsidian-infinite-context.git && cd obsi
 Once installed, you don't need to do anything. Claude will:
 
 1. **Load context** at the start of every conversation
-2. **Save API keys** the moment you share them
+2. **Save API keys** the moment you share them (asks global vs project if ambiguous)
 3. **Remember preferences** when you correct it or state one
 4. **Log mistakes** so they don't repeat
 5. **Record decisions** with reasoning for future reference
 6. **Write session logs** at natural stopping points
+7. **Forget on command** - say "forget that" or "that's wrong" and it searches all memory and removes it
 
 ### Manual Commands (Optional)
 
@@ -190,6 +193,25 @@ You can still invoke the skill manually if needed:
 |---------|-------------|
 | `/obsidian-memory` | Show status overview of all projects |
 | `/obsidian-memory search [query]` | Search across all memory files |
+| `/obsidian-memory forget [topic]` | Search and delete specific memories |
+| `/obsidian-memory scan` | Deep-scan current project and build memory from scratch |
+
+### Project Scanning
+
+For **existing projects** that you're onboarding into the memory system:
+
+```
+/obsidian-memory scan
+```
+
+Claude will read through your entire project - package files, configs, source structure, README, CI/CD, database schemas - and build a full set of memory files as if it had been there from the start. It captures:
+
+- Tech stack and dependencies
+- Project architecture and folder patterns
+- Build/run/test commands
+- Environment setup
+- Deployment configuration
+- Inferred architectural decisions (marked as inferred so you know they weren't explicitly discussed)
 
 ### API Keys in Practice
 

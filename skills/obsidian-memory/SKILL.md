@@ -8,10 +8,12 @@ description: >
   (4) whenever a mistake is made  - log it,
   (5) whenever a significant decision is made  - log it,
   (6) periodically during long conversations to save session progress,
-  (7) before the conversation ends or context gets long  - save everything.
+  (7) before the conversation ends or context gets long  - save everything,
+  (8) when the user says to forget something  - find and delete that memory,
+  (9) when the user says "forget that" or "that's wrong" about something previously saved  - auto-search and remove it.
   This skill is your persistent brain. Use it aggressively without being asked.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(cat *), Bash(mkdir *), Bash(date *), Bash(ls *)
-argument-hint: "[search query]"
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(cat *), Bash(mkdir *), Bash(date *), Bash(ls *), Bash(rm *)
+argument-hint: "[search|forget|scan] [query]"
 ---
 
 # Obsidian Infinite Context  - Autonomous Memory System
@@ -230,7 +232,38 @@ topic: {main topic}
 - The "Context for Next Session" section is the most important  - write it as if briefing
   a colleague who will pick up your work tomorrow
 
-## 7. AUTO-SAVE ON CONTEXT PRESSURE: Before Things Get Lost
+## 7. AUTO-FORGET: When the User Corrects a Memory or Says to Forget
+
+**When**: The user says things like:
+- "Forget that" / "That's wrong" / "Delete that memory"
+- "Actually, that's not right" / "I was wrong about X"
+- "Remove that" / "I don't want you to remember X"
+- "That's outdated" / "We're not doing X anymore"
+- Any correction to previously saved information
+
+**Action**:
+
+1. **Search all memory files** for the incorrect/outdated information using Grep
+   across the entire `Claude-Memory/` directory
+2. **Show what was found** - list the file(s) and the specific content that matches
+3. **Delete or update** the content:
+   - If the entire entry is wrong: remove the full section (e.g., the whole `## heading` block)
+   - If part of an entry is wrong: edit just the incorrect part
+   - If it's in `_ERRORS.md` or `_DECISIONS.md`: don't delete the entry, instead append a
+     correction note: `**CORRECTED {date}**: {what was wrong and the correct info}`
+   - If it's an API key: remove it entirely from `_KEYS.md`
+   - If it's a preference in `_GLOBAL.md` or `_PROJECT.md`: remove or replace it
+   - If it's in a session log: add a correction note at the top of the session file
+4. **Confirm** briefly: "Removed/corrected that from Obsidian memory."
+
+**Rules for forgetting**:
+- Search broadly - check ALL memory files, not just the obvious ones
+- If multiple files contain the info, fix all of them
+- When in doubt about what to delete, show the user what you found and ask which to remove
+- Never silently ignore a forget request - always confirm what was done
+- If nothing is found, say so: "I couldn't find that in my Obsidian memory. Could you be more specific?"
+
+## 8. AUTO-SAVE ON CONTEXT PRESSURE: Before Things Get Lost
 
 **When**: The conversation has been going for a while and you've accumulated significant
 context that hasn't been saved yet.
@@ -247,6 +280,61 @@ Show: all projects, last session date, key counts, memory file sizes.
 
 ### `/obsidian-memory search [query]`
 Grep across all files in `Claude-Memory/` for the query. Show results grouped by file.
+
+### `/obsidian-memory forget [topic]`
+Manually trigger a memory search and deletion. Searches all memory files for the topic,
+shows what was found, and removes/corrects it after confirmation.
+
+### `/obsidian-memory scan`
+**Deep-scan the current project and build memory from scratch**, as if Claude had been
+there from the start. This is for onboarding an existing project into the memory system.
+
+**What it does**:
+
+1. **Detect project basics**:
+   - Read `package.json`, `Cargo.toml`, `go.mod`, `requirements.txt`, `pyproject.toml`,
+     `Gemfile`, `*.csproj`, `pom.xml`, or similar to identify tech stack and dependencies
+   - Read `.git/config` for remote info
+   - Check for CI/CD configs (`.github/workflows/`, `Dockerfile`, `.gitlab-ci.yml`, etc.)
+
+2. **Analyze project structure**:
+   - Map the directory tree (top 3 levels)
+   - Identify entry points, main modules, and key directories
+   - Detect patterns: monorepo, MVC, microservices, etc.
+
+3. **Read key files**:
+   - README, CONTRIBUTING, CHANGELOG if they exist
+   - Config files (.env.example, tsconfig, eslint, prettier, etc.)
+   - Main entry point files
+   - Database schema/migration files if present
+
+4. **Extract and save**:
+   - Write a comprehensive `_PROJECT.md` with:
+     - Overview (what the project does, based on README/package description)
+     - Tech Stack (languages, frameworks, key dependencies with versions)
+     - Architecture (folder structure, patterns detected)
+     - Build/Run commands (from package.json scripts, Makefile, etc.)
+     - Environment setup (from .env.example, docker-compose, etc.)
+     - Testing setup (test framework, test commands)
+     - Deployment info (from CI/CD configs)
+   - Write `_DECISIONS.md` with architectural decisions inferred from the codebase:
+     - Why certain frameworks/libraries were chosen (based on what's installed)
+     - Database choice and ORM
+     - Auth approach
+     - State management approach (for frontend)
+   - Write relevant `notes/` files for complex subsystems found
+   - Detect any `.env`, `.env.example`, or config files with API key placeholders
+     and create empty entries in `_KEYS.md` as reminders
+
+5. **Report**: Show a summary of everything that was captured and saved.
+
+**Important scan rules**:
+- Never store full file contents - summarize and reference file paths
+- Mark all inferred decisions with `**Inferred from codebase**` so the user knows
+  these weren't explicitly discussed
+- Don't overwrite existing memory files - merge new info into them
+- If `_PROJECT.md` already exists, ask before overwriting or offer to merge
+- The scan should take 1-2 minutes for a typical project
 
 ---
 
