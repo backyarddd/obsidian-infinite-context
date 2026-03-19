@@ -24,9 +24,9 @@ have to ask you to save or recall  - just do it silently.**
 
 ## Vault Location
 
-The Obsidian vault is at: `$OBSIDIAN_VAULT_PATH`
+The Obsidian vault is at: `C:/Users/david/Documents/Obsidian Vault`
 
-If `$OBSIDIAN_VAULT_PATH` is not set, read `~/.claude/obsidian-memory.json` for the `vaultPath`
+If `C:/Users/david/Documents/Obsidian Vault` is not set, read `~/.claude/obsidian-memory.json` for the `vaultPath`
 field. If neither exists, ask the user once, then save their answer to the config file so you
 never have to ask again.
 
@@ -325,28 +325,42 @@ topic: {main topic}
 
 ## 8. AUTO-COMPACT AT 75%: Save Everything Then Compact
 
-**When**: You estimate the conversation has used roughly 75% of the context window.
-Signs that you're approaching this:
-- The conversation has been very long (30+ back-and-forth messages)
-- You've read many large files during the session
-- You've generated a lot of code output
-- Tool results have been extensive
-- You sense earlier parts of the conversation are becoming hazy
+**THIS IS CRITICAL. YOU MUST ACTIVELY MONITOR CONTEXT USAGE.**
 
-**Action**:
+You CANNOT see the exact context percentage, so you MUST count and estimate aggressively.
+Use these heuristics to determine when you're at ~75%:
+
+**Hard triggers (if ANY of these are true, you're likely at 75%+)**:
+- You have exchanged 15+ back-and-forth messages with substantial content
+- You have read 5+ files during this session
+- You have made 10+ tool calls total
+- You have generated large code blocks (100+ lines total across the session)
+- You feel like earlier messages in the conversation are becoming unclear or distant
+- The user has mentioned context percentage (e.g., "86% used")
+
+**Count your messages.** After every response, mentally track: "This is message ~N."
+When you hit message 15+, START the save-and-compact process.
+
+**DO NOT WAIT for the user to tell you.** By 86% it is already too late. Act at 75%.
+
+**Action** (do ALL of these in ONE turn, then compact):
 1. **Save EVERYTHING to Obsidian first**:
-   - Write a comprehensive session log covering all work done so far
+   - Write a comprehensive session log covering ALL work done so far
    - Update `_PROJECT.md` with any new info learned
    - Update `_ERRORS.md`, `_DECISIONS.md` if applicable
    - Save any unsaved preferences or keys
    - Make sure the session log's "Context for Next Session" section is detailed enough
      to fully reconstruct what was happening
-2. **Tell the user**: "Context is getting full. Saving everything to Obsidian and compacting."
-3. **Trigger compaction** using `/compact`
+   - Include ALL open tasks, current state of work, and what needs to happen next
+2. **Tell the user**: "Context is getting full (~75%). Saving everything to Obsidian now and compacting."
+3. **Run `/compact`** to free up the context window
 4. **After compaction**, immediately recall from Obsidian to reload the most important
    context back into the now-freed window
 
-This way nothing is ever lost to compaction  - it's all in Obsidian before the context
+**IMPORTANT**: If the user mentions the context percentage or you see it referenced
+anywhere, USE THAT NUMBER. If it's above 70%, start saving immediately.
+
+This way nothing is ever lost to compaction. It's all in Obsidian before the context
 gets cleared, and the most relevant stuff gets reloaded right after.
 
 ## 9. CROSS-PROJECT LEARNING: Generalize Solutions Across Projects
