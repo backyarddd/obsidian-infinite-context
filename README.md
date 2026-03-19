@@ -16,9 +16,15 @@ Claude Code's context window is finite  - when it fills up, older conversation h
 | **After completing a task** | Writes a session log with full context | `projects/{name}/sessions/` |
 | **Conversation getting long** | Proactively saves before context is lost | session log + project updates |
 | **You say "forget that" or correct old info** | Searches all memory, deletes/corrects it | all memory files |
+| **New conversation with open items** | Surfaces unfinished work from last session | reads latest session log |
+| **Memory conflicts with codebase** | Flags the conflict and asks which is correct | updates outdated memory |
+| **Stale memory gets referenced** | Asks if it's still accurate before acting on it | refreshes or removes |
+| **Clever solution found** | Asks if you want to save it for other projects | `_GLOBAL.md` learned patterns |
+| **Dependency versions change** | Flags version changes and asks about breaking changes | `_PROJECT.md` dependencies |
 
 **You never have to tell Claude to save or remember anything. It just does it.**
 **You can also tell it to forget anything, and it will find and remove it automatically.**
+**It never assumes - if something is unclear, it asks.**
 
 ## Per-Project API Keys
 
@@ -184,6 +190,15 @@ Once installed, you don't need to do anything. Claude will:
 5. **Record decisions** with reasoning for future reference
 6. **Write session logs** at natural stopping points
 7. **Forget on command** - say "forget that" or "that's wrong" and it searches all memory and removes it
+8. **Session continuity** - surfaces unfinished items from your last session so you can pick up where you left off
+9. **Conflict detection** - flags when memory contradicts the current codebase and asks which is correct
+10. **Staleness checking** - when an old memory becomes relevant, asks if it's still accurate before acting on it
+11. **Cross-project learning** - when you solve a tricky problem, asks if you want to save a generalized version for all projects
+12. **Dependency tracking** - tracks key dependency versions and flags when they change
+13. **Rollback support** - snapshots memory before major changes so you can undo them
+14. **Related memories** - auto-links entries with Obsidian wikilinks so graph view shows how everything connects
+15. **Memory stats** - each session log includes counts of what was saved during the session
+16. **Never assumes** - if something is unclear, it asks a quick question instead of guessing
 
 ### Manual Commands (Optional)
 
@@ -195,6 +210,7 @@ You can still invoke the skill manually if needed:
 | `/obsidian-memory search [query]` | Search across all memory files |
 | `/obsidian-memory forget [topic]` | Search and delete specific memories |
 | `/obsidian-memory scan` | Deep-scan current project and build memory from scratch |
+| `/obsidian-memory rollback` | Undo the last major memory change |
 
 ### Project Scanning
 

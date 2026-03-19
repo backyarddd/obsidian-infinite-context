@@ -46,8 +46,10 @@ Claude-Memory/
 │       ├── _DECISIONS.md   # Technical decisions + reasoning (append-only)
 │       ├── sessions/
 │       │   └── {YYYY-MM-DD}_{HH-MM}_{topic}.md
-│       └── notes/
-│           └── {topic}.md
+│       ├── notes/
+│       │   └── {topic}.md
+│       └── _snapshots/
+│           └── {YYYY-MM-DD}_{HH-MM}/   # Rollback snapshots (max 5)
 └── templates/
     ├── session.md
     └── project.md
@@ -82,6 +84,26 @@ Determine the project name from (in order):
 **How to present**: Don't dump all the memory at the user. Just internalize it and say
 something brief like "Loaded project context from Obsidian." Only mention specifics if
 they're directly relevant to what the user is asking about.
+
+**Session continuity**: Check the most recent session log for an "Open Items" section.
+If there are unfinished items, surface them to the user:
+"Last session you left off with these open items:
+- {item 1}
+- {item 2}
+Want to pick up where you left off?"
+
+**Memory conflict detection**: While recalling, compare memory against the current
+codebase state. If something contradicts (e.g., memory says "uses React" but you see
+Vue in package.json, or memory says a file exists that doesn't), flag it:
+"I noticed a conflict - my memory says {X} but the codebase shows {Y}. Which is correct?"
+Then update or delete the outdated memory based on the user's answer.
+
+**Staleness check**: When reading memories, note entries that haven't been updated or
+referenced in 30+ days (check the date in frontmatter or entry timestamps). Don't flag
+them during recall - but if a stale memory becomes relevant later in conversation,
+ask before acting on it:
+"I have a note from {date} that says {X}. Is this still accurate, or has it changed?"
+Update or remove based on the answer.
 
 ## 2. AUTO-SAVE API KEYS: Whenever a Key Appears
 
@@ -223,6 +245,13 @@ topic: {main topic}
 
 ## Context for Next Session
 {what the next session needs to know to continue seamlessly}
+
+## Memory Stats
+- Preferences saved: {count}
+- Errors logged: {count}
+- Decisions logged: {count}
+- Keys saved: {count}
+- Memories forgotten/corrected: {count}
 ```
 
 **Rules for session logs**:
@@ -271,6 +300,105 @@ context that hasn't been saved yet.
 **Action**: Proactively write a session log + update `_PROJECT.md` with anything new.
 Don't announce this  - just do it quietly. If asked, you can mention you saved progress.
 
+## 9. CROSS-PROJECT LEARNING: Generalize Solutions Across Projects
+
+**When**: You solve a tricky problem, discover a useful pattern, or find a clever
+workaround that could apply to other projects too.
+
+**Action**:
+1. **Ask the user first**: "This solution for {problem} could be useful across your
+   other projects too. Want me to save a generalized version to your global memory?"
+2. If they say yes, add a generalized version to `_GLOBAL.md` under a new section
+   `## Learned Patterns`:
+
+```markdown
+## Learned Patterns
+
+### {Pattern Name} (from [[{project-name}]])
+**Problem**: {generalized problem description}
+**Solution**: {generalized solution, not project-specific}
+**Discovered**: {date}
+**Tags**: #pattern #{category}
+```
+
+3. Use wikilinks back to the original project so the user can trace where it came from.
+
+**Never auto-save cross-project learnings without asking.** The user must confirm.
+
+## 10. DEPENDENCY AND VERSION TRACKING
+
+**When**:
+- During a `/obsidian-memory scan`
+- When you notice dependency changes during normal work (e.g., reading package.json)
+- When the user installs/upgrades/removes a dependency
+
+**Action**: Maintain a `## Dependencies` section in `_PROJECT.md`:
+
+```markdown
+## Dependencies (Key)
+- **{package}**: v{version} - {what it's used for}
+- **{package}**: v{version} - {what it's used for}
+**Last checked**: {date}
+```
+
+Only track key dependencies (frameworks, ORMs, auth libs, etc.), not every utility package.
+
+When recalling, if you notice a version changed since last recorded, flag it:
+"Heads up - {package} changed from v{old} to v{new} since my last note. Any breaking
+changes I should know about?"
+
+## 11. NEVER ASSUME - ASK WHEN UNSURE
+
+**This overrides all other behaviors.** If you are unsure about ANY of the following,
+ASK the user instead of guessing:
+
+- Whether something is a preference or a one-time instruction
+- Whether an API key is for this project or global
+- Whether a decision is final or still being explored
+- Whether a correction means "delete the old info" or "update it"
+- Whether a pattern should be saved cross-project
+- What a piece of information means or how it should be categorized
+- Whether a stale memory is still valid
+- Whether conflicting information should replace the old or coexist
+
+**When in doubt, ask a short clarifying question.** A quick question is always better
+than saving wrong information that has to be corrected later.
+
+## 12. ROLLBACK SUPPORT: Snapshot Before Major Changes
+
+**When**: Before any of these major memory operations:
+- `/obsidian-memory scan` (overwrites or merges project memory)
+- Bulk deletion (forget requests that affect multiple files)
+- Major corrections that rewrite large sections
+
+**Action**:
+1. Create a snapshot directory: `projects/{project}/_snapshots/{YYYY-MM-DD}_{HH-MM}/`
+2. Copy the files that are about to be changed into the snapshot directory
+3. Proceed with the changes
+4. Briefly note: "Snapshot saved. Say 'undo that memory change' to rollback."
+
+**On rollback request** ("undo that", "revert the memory change", "go back"):
+1. Find the most recent snapshot in `_snapshots/`
+2. Show what would be restored
+3. Ask for confirmation
+4. Copy snapshot files back over the current ones
+5. Delete the snapshot after successful restore
+
+Keep only the last 5 snapshots per project. Delete older ones automatically.
+
+## 13. RELATED MEMORIES: Auto-Link with Wikilinks
+
+**When**: Writing any entry to `_ERRORS.md`, `_DECISIONS.md`, or session logs.
+
+**Action**: Search existing memory for related content and add wikilinks:
+- When logging an error, check if similar errors exist: `Related: [[_ERRORS#2026-01-15 - similar issue]]`
+- When logging a decision, link to decisions it depends on or supersedes
+- In session logs, link to relevant decisions and errors discussed
+- Use Obsidian's `[[filename#heading]]` syntax for precise links
+
+This makes Obsidian's graph view useful  - you can see how decisions, errors, and
+sessions connect to each other.
+
 ---
 
 # MANUAL COMMANDS (when user invokes /obsidian-memory directly)
@@ -284,6 +412,10 @@ Grep across all files in `Claude-Memory/` for the query. Show results grouped by
 ### `/obsidian-memory forget [topic]`
 Manually trigger a memory search and deletion. Searches all memory files for the topic,
 shows what was found, and removes/corrects it after confirmation.
+
+### `/obsidian-memory rollback`
+Show the most recent memory snapshot and offer to restore it. Lists what files would
+be reverted and asks for confirmation before restoring.
 
 ### `/obsidian-memory scan`
 **Deep-scan the current project and build memory from scratch**, as if Claude had been
