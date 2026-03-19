@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (if ever needed)
+node_modules/
+package-lock.json
+
+# Obsidian
+.obsidian/
+
+# Sensitive
+*.env
+obsidian-memory.json
