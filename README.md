@@ -21,6 +21,8 @@ Claude Code's context window is finite  - when it fills up, older conversation h
 | **Stale memory gets referenced** | Asks if it's still accurate before acting on it | refreshes or removes |
 | **Clever solution found** | Asks if you want to save it for other projects | `_GLOBAL.md` learned patterns |
 | **Dependency versions change** | Flags version changes and asks about breaking changes | `_PROJECT.md` dependencies |
+| **Context hits 75%** | Saves everything to Obsidian, compacts, then reloads key context | session log + all memory files |
+| **You say "skip memory for this project"** | Disables all memory for that project | `_DISABLED.md` |
 
 **You never have to tell Claude to save or remember anything. It just does it.**
 **You can also tell it to forget anything, and it will find and remove it automatically.**
@@ -199,6 +201,8 @@ Once installed, you don't need to do anything. Claude will:
 14. **Related memories** - auto-links entries with Obsidian wikilinks so graph view shows how everything connects
 15. **Memory stats** - each session log includes counts of what was saved during the session
 16. **Never assumes** - if something is unclear, it asks a quick question instead of guessing
+17. **Auto-compact at 75%** - saves everything to Obsidian before compacting, then reloads after so nothing is lost
+18. **Per-project opt-out** - say "don't use memory for this project" and it goes completely silent for that project. Say "turn it back on" to re-enable
 
 ### Manual Commands (Optional)
 

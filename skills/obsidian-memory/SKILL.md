@@ -38,6 +38,7 @@ All memory lives under: `{vault}/Claude-Memory/`
 Claude-Memory/
 ├── _GLOBAL.md              # Cross-project preferences, global settings
 ├── _KEYS.md                # Global API keys (fallback for all projects)
+├── _DISABLED.md            # Projects that have opted out of memory tracking
 ├── projects/
 │   └── {project-name}/
 │       ├── _PROJECT.md     # Project master memory
@@ -63,9 +64,39 @@ Determine the project name from (in order):
 3. `.git` remote origin name
 4. Ask the user (then save it so you never ask again)
 
+## Project Opt-Out (Disabled Projects)
+
+The user can disable Obsidian memory for specific projects. They might say things like:
+- "Don't use obsidian memory for this project"
+- "Skip the vault stuff here, it's too small"
+- "I don't need memory for this one"
+- "No obsidian for this project"
+- Or any similar phrasing that indicates they don't want memory tracking
+
+**When the user opts out of a project**:
+1. Save the project name to a `_DISABLED.md` file in `Claude-Memory/`:
+   ```markdown
+   ## {project-name}
+   - **Disabled**: {date}
+   - **Reason**: {what the user said}
+   ```
+2. Confirm: "Got it, I won't use Obsidian memory for {project}."
+3. **Stop all automatic behaviors** for that project  - no recall, no saving, no logging,
+   no key storage, nothing. The skill becomes completely invisible.
+
+**During recall**, always check `_DISABLED.md` first. If the current project is listed,
+skip everything silently  - don't even mention Obsidian.
+
+**Re-enabling**: If the user later says "turn obsidian back on for this project" or
+"actually, let's use memory here", remove the project from `_DISABLED.md` and resume
+normal behavior.
+
 ---
 
 # AUTOMATIC BEHAVIORS  - DO ALL OF THESE WITHOUT BEING ASKED
+
+**IMPORTANT**: Before executing ANY automatic behavior, check `_DISABLED.md` first.
+If the current project is listed there, do NOTHING. Skip silently.
 
 ## 1. AUTO-RECALL: Every Conversation Start
 
@@ -292,13 +323,31 @@ topic: {main topic}
 - Never silently ignore a forget request - always confirm what was done
 - If nothing is found, say so: "I couldn't find that in my Obsidian memory. Could you be more specific?"
 
-## 8. AUTO-SAVE ON CONTEXT PRESSURE: Before Things Get Lost
+## 8. AUTO-COMPACT AT 75%: Save Everything Then Compact
 
-**When**: The conversation has been going for a while and you've accumulated significant
-context that hasn't been saved yet.
+**When**: You estimate the conversation has used roughly 75% of the context window.
+Signs that you're approaching this:
+- The conversation has been very long (30+ back-and-forth messages)
+- You've read many large files during the session
+- You've generated a lot of code output
+- Tool results have been extensive
+- You sense earlier parts of the conversation are becoming hazy
 
-**Action**: Proactively write a session log + update `_PROJECT.md` with anything new.
-Don't announce this  - just do it quietly. If asked, you can mention you saved progress.
+**Action**:
+1. **Save EVERYTHING to Obsidian first**:
+   - Write a comprehensive session log covering all work done so far
+   - Update `_PROJECT.md` with any new info learned
+   - Update `_ERRORS.md`, `_DECISIONS.md` if applicable
+   - Save any unsaved preferences or keys
+   - Make sure the session log's "Context for Next Session" section is detailed enough
+     to fully reconstruct what was happening
+2. **Tell the user**: "Context is getting full. Saving everything to Obsidian and compacting."
+3. **Trigger compaction** using `/compact`
+4. **After compaction**, immediately recall from Obsidian to reload the most important
+   context back into the now-freed window
+
+This way nothing is ever lost to compaction  - it's all in Obsidian before the context
+gets cleared, and the most relevant stuff gets reloaded right after.
 
 ## 9. CROSS-PROJECT LEARNING: Generalize Solutions Across Projects
 
