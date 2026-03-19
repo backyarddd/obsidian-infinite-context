@@ -184,25 +184,31 @@ New-Item -ItemType Directory -Path $claudeDir -Force | Out-Null
 Write-Host ""
 Write-Host "Saved config to $ConfigFile" -ForegroundColor Green
 
-# Install skill
-$skillSource = Join-Path $PSScriptRoot "..\skills\obsidian-memory\SKILL.md"
-$skillDest = Join-Path $env:USERPROFILE ".claude\skills\obsidian-memory"
-New-Item -ItemType Directory -Path $skillDest -Force | Out-Null
+# Install all skills
+$skillsSource = Join-Path $PSScriptRoot "..\skills"
 
-(Get-Content $skillSource -Raw) -replace '\$OBSIDIAN_VAULT_PATH', $VaultPath | Set-Content (Join-Path $skillDest "SKILL.md") -Encoding UTF8
-
-Write-Host "Installed skill to $skillDest" -ForegroundColor Green
+Get-ChildItem -Path $skillsSource -Directory -Filter "obsidian-*" | ForEach-Object {
+    $skillName = $_.Name
+    $dest = Join-Path $env:USERPROFILE ".claude\skills\$skillName"
+    New-Item -ItemType Directory -Path $dest -Force | Out-Null
+    if ($skillName -eq "obsidian-memory") {
+        (Get-Content (Join-Path $_.FullName "SKILL.md") -Raw) -replace '\$OBSIDIAN_VAULT_PATH', $VaultPath | Set-Content (Join-Path $dest "SKILL.md") -Encoding UTF8
+    } else {
+        Copy-Item (Join-Path $_.FullName "SKILL.md") (Join-Path $dest "SKILL.md")
+    }
+    Write-Host "  Installed $skillName" -ForegroundColor Green
+}
 
 Write-Host ""
 Write-Host "  Setup Complete!" -ForegroundColor Cyan
 Write-Host "  ==================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Usage in Claude Code:"
-Write-Host "  /obsidian-memory recall    - Load project context"
-Write-Host "  /obsidian-memory save      - Save current context"
-Write-Host "  /obsidian-memory search X  - Search all memory"
-Write-Host "  /obsidian-memory keys list - List API keys"
-Write-Host "  /obsidian-memory log       - Quick session log"
-Write-Host "  /obsidian-memory status    - Memory overview"
+Write-Host "  /obsidian-memory            - Auto-active memory brain"
+Write-Host "  /obsidian-search [query]    - Search all memory"
+Write-Host "  /obsidian-forget [topic]    - Delete specific memories"
+Write-Host "  /obsidian-scan              - Onboard existing project"
+Write-Host "  /obsidian-rollback          - Undo memory changes"
+Write-Host "  /obsidian-status            - Memory overview"
 Write-Host ""
 Write-Host "Claude will also auto-save/recall as needed."

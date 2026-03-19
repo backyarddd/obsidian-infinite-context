@@ -323,42 +323,35 @@ topic: {main topic}
 - Never silently ignore a forget request - always confirm what was done
 - If nothing is found, say so: "I couldn't find that in my Obsidian memory. Could you be more specific?"
 
-## 8. AUTO-COMPACT AT 75%: Save Everything Then Compact
+## 8. PROACTIVE SAVE BEFORE COMPACTION
 
-**THIS IS CRITICAL. YOU MUST ACTIVELY MONITOR CONTEXT USAGE.**
+**THIS IS CRITICAL. You CANNOT auto-compact, but you CAN save everything before context is lost.**
 
-You CANNOT see the exact context percentage, so you MUST count and estimate aggressively.
-Use these heuristics to determine when you're at ~75%:
+You cannot see the exact context percentage or trigger `/compact` programmatically.
+However, you MUST proactively save session state when you sense the conversation is getting long.
 
-**Hard triggers (if ANY of these are true, you're likely at 75%+)**:
+**Heuristics for when to save proactively (any of these)**:
 - You have exchanged 15+ back-and-forth messages with substantial content
 - You have read 5+ files during this session
 - You have made 10+ tool calls total
 - You have generated large code blocks (100+ lines total across the session)
-- You feel like earlier messages in the conversation are becoming unclear or distant
-- The user has mentioned context percentage (e.g., "86% used")
+- Earlier messages in the conversation feel distant or unclear
+- The user mentions context percentage (e.g., "86% used")
 
-**Count your messages.** After every response, mentally track: "This is message ~N."
-When you hit message 15+, START the save-and-compact process.
-
-**DO NOT WAIT for the user to tell you.** By 86% it is already too late. Act at 75%.
-
-**Action** (do ALL of these in ONE turn, then compact):
-1. **Save EVERYTHING to Obsidian first**:
+**Action** (do ALL of these):
+1. **Save EVERYTHING to Obsidian**:
    - Write a comprehensive session log covering ALL work done so far
    - Update `_PROJECT.md` with any new info learned
    - Update `_ERRORS.md`, `_DECISIONS.md` if applicable
    - Save any unsaved preferences or keys
-   - Make sure the session log's "Context for Next Session" section is detailed enough
+   - Make the session log's "Context for Next Session" section detailed enough
      to fully reconstruct what was happening
    - Include ALL open tasks, current state of work, and what needs to happen next
-2. **Tell the user**: "Context is getting full (~75%). Saving everything to Obsidian now and compacting."
-3. **Run `/compact`** to free up the context window
-4. **After compaction**, immediately recall from Obsidian to reload the most important
-   context back into the now-freed window
+2. **Tell the user**: "Context is getting long. I've saved everything to Obsidian. You can run `/compact` now and I'll reload from memory after."
+3. **After the user compacts**, immediately recall from Obsidian to reload context
 
 **IMPORTANT**: If the user mentions the context percentage or you see it referenced
-anywhere, USE THAT NUMBER. If it's above 70%, start saving immediately.
+anywhere, and it's above 70%, start saving immediately and suggest they compact.
 
 This way nothing is ever lost to compaction. It's all in Obsidian before the context
 gets cleared, and the most relevant stuff gets reloaded right after.

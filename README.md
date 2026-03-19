@@ -27,7 +27,7 @@ It works **completely automatically**. You don't run commands or tell Claude to 
 | **Stale memory gets referenced** | Asks if it's still accurate before acting on it | refreshes or removes |
 | **Clever solution found** | Asks if you want to save it for other projects | `_GLOBAL.md` learned patterns |
 | **Dependency versions change** | Flags version changes and asks about breaking changes | `_PROJECT.md` dependencies |
-| **Context hits 75%** | Saves everything to Obsidian, compacts, then reloads key context | session log + all memory files |
+| **Context getting long** | Proactively saves everything to Obsidian and suggests you run /compact | session log + all memory files |
 | **You say "skip memory for this project"** | Disables all memory for that project | `_DISABLED.md` |
 
 **You never have to tell Claude to save or remember anything. It just does it.**
@@ -185,6 +185,33 @@ git clone https://github.com/backyarddd/obsidian-infinite-context.git && cd obsi
 
 ---
 
+## Recommended: CLAUDE.md Integration
+
+For the best experience, add the Obsidian memory instructions to your global `CLAUDE.md` file. This ensures Claude always knows to use the memory system, even before skills are loaded.
+
+**Copy the example file:**
+
+```bash
+cp CLAUDE.md.example ~/.claude/CLAUDE.md
+```
+
+Or if you already have a `CLAUDE.md`, merge the relevant sections from `CLAUDE.md.example` into yours.
+
+The example file includes:
+- **Always Active** directive telling Claude to invoke obsidian-memory at every conversation start
+- **Credential Capture** rules for auto-saving API keys
+- **Preference Tracking** for remembering corrections
+- **Mistake Logging** for learning from errors
+- **Decision Logging** for architectural context
+- **Session Persistence** for saving progress during long conversations
+- **Context Preservation** for saving before compaction
+- **Forget Support** for deleting memories on command
+- **Auto-Correction** for fixing wrong memories
+
+This makes the memory system more reliable since `CLAUDE.md` is loaded before skills.
+
+---
+
 ## Usage
 
 ### It's Automatic
@@ -207,7 +234,7 @@ Once installed, you don't need to do anything. Claude will:
 14. **Related memories** - auto-links entries with Obsidian wikilinks so graph view shows how everything connects
 15. **Memory stats** - each session log includes counts of what was saved during the session
 16. **Never assumes** - if something is unclear, it asks a quick question instead of guessing
-17. **Auto-compact at 75%** - saves everything to Obsidian before compacting, then reloads after so nothing is lost
+17. **Proactive save before compaction** - when context gets long, saves everything to Obsidian and tells you to run /compact so nothing is lost
 18. **Per-project opt-out** - say "don't use memory for this project" and it goes completely silent for that project. Say "turn it back on" to re-enable
 
 ### Manual Commands (Optional)
@@ -216,11 +243,12 @@ You can still invoke the skill manually if needed:
 
 | Command | Description |
 |---------|-------------|
-| `/obsidian-memory` | Show status overview of all projects |
-| `/obsidian-memory search [query]` | Search across all memory files |
-| `/obsidian-memory forget [topic]` | Search and delete specific memories |
-| `/obsidian-memory scan` | Deep-scan current project and build memory from scratch |
-| `/obsidian-memory rollback` | Undo the last major memory change |
+| `/obsidian-memory` | Main auto-behavior brain (always active) |
+| `/obsidian-search [query]` | Search across all memory files |
+| `/obsidian-forget [topic]` | Search and delete specific memories |
+| `/obsidian-scan` | Deep-scan current project and build memory from scratch |
+| `/obsidian-rollback` | Undo the last major memory change |
+| `/obsidian-status` | Show overview of all projects and memory stats |
 
 ### Project Scanning
 
@@ -312,11 +340,21 @@ Set `OBSIDIAN_VAULT_PATH` per-project in your shell config. The skill writes to 
 ```
 obsidian-infinite-context/
 ├── README.md
+├── CLAUDE.md.example          <- Recommended CLAUDE.md (copy to ~/.claude/)
 ├── LICENSE
-├── .gitignore
 ├── skills/
-│   └── obsidian-memory/
-│       └── SKILL.md            # The Claude Code skill (this is the brain)
+│   ├── obsidian-memory/
+│   │   └── SKILL.md            # Main auto-behavior brain
+│   ├── obsidian-search/
+│   │   └── SKILL.md            # Search all memory files
+│   ├── obsidian-forget/
+│   │   └── SKILL.md            # Delete specific memories
+│   ├── obsidian-scan/
+│   │   └── SKILL.md            # Onboard existing projects
+│   ├── obsidian-rollback/
+│   │   └── SKILL.md            # Undo memory changes
+│   └── obsidian-status/
+│       └── SKILL.md            # Memory overview
 └── scripts/
     ├── setup.sh                # Setup for macOS / Linux / Git Bash
     └── setup.ps1               # Setup for Windows PowerShell

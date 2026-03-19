@@ -199,16 +199,20 @@ EOF
 echo ""
 echo -e "${GREEN}Saved config to ~/.claude/obsidian-memory.json${NC}"
 
-# Install skill
-SKILL_SOURCE="$(cd "$(dirname "$0")/../skills/obsidian-memory" && pwd)"
-SKILL_DEST="$HOME/.claude/skills/obsidian-memory"
+# Install all skills
+SKILLS_SOURCE="$(cd "$(dirname "$0")/../skills" && pwd)"
 
-mkdir -p "$SKILL_DEST"
-
-# Copy skill files, replacing vault path placeholder
-sed "s|\$OBSIDIAN_VAULT_PATH|$VAULT_PATH|g" "$SKILL_SOURCE/SKILL.md" > "$SKILL_DEST/SKILL.md"
-
-echo -e "${GREEN}Installed skill to $SKILL_DEST${NC}"
+for skill_dir in "$SKILLS_SOURCE"/obsidian-*; do
+    skill_name=$(basename "$skill_dir")
+    dest="$HOME/.claude/skills/$skill_name"
+    mkdir -p "$dest"
+    if [ "$skill_name" = "obsidian-memory" ]; then
+        sed "s|\$OBSIDIAN_VAULT_PATH|$VAULT_PATH|g" "$skill_dir/SKILL.md" > "$dest/SKILL.md"
+    else
+        cp "$skill_dir/SKILL.md" "$dest/SKILL.md"
+    fi
+    echo "  Installed $skill_name"
+done
 
 # Add hook for compaction recovery
 SETTINGS_FILE="$HOME/.claude/settings.json"
@@ -243,11 +247,11 @@ echo -e "${BLUE}║  Setup Complete!                             ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 echo "Usage in Claude Code:"
-echo "  /obsidian-memory recall     - Load project context"
-echo "  /obsidian-memory save       - Save current context"
-echo "  /obsidian-memory search X   - Search all memory"
-echo "  /obsidian-memory keys list  - List API keys"
-echo "  /obsidian-memory log        - Quick session log"
-echo "  /obsidian-memory status     - Memory overview"
+echo "  /obsidian-memory            - Auto-active memory brain"
+echo "  /obsidian-search [query]    - Search all memory"
+echo "  /obsidian-forget [topic]    - Delete specific memories"
+echo "  /obsidian-scan              - Onboard existing project"
+echo "  /obsidian-rollback          - Undo memory changes"
+echo "  /obsidian-status            - Memory overview"
 echo ""
 echo "Claude will also auto-save/recall as needed."

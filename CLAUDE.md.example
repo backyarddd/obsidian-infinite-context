@@ -1,0 +1,12 @@
+## Obsidian Memory - Persistent Brain
+
+- **Always Active**: Invoke obsidian-memory at every conversation start to recall project context
+- **Credential Capture**: Whenever the user shares an API key, token, secret, or credential - save it immediately to the vault
+- **Preference Tracking**: Whenever the user states a preference or corrects you - save it to the vault
+- **Mistake Logging**: Whenever a mistake is made - log it to the vault for future reference
+- **Decision Logging**: Whenever a significant decision is made - log it to the vault
+- **Session Persistence**: Periodically during long conversations, save session progress to the vault
+- **Context Preservation**: Before the conversation ends or context gets long - save everything to the vault
+- **Forget Support**: When the user says to forget something - find and delete that memory from the vault
+- **Auto-Correction**: When the user says "forget that" or "that's wrong" about something previously saved - auto-search and remove it from the vault
+- Use obsidian-memory as the persistent brain across sessions - invoke aggressively without being asked
