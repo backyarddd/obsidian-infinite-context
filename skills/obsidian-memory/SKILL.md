@@ -102,12 +102,27 @@ they're directly relevant to what the user is asking about.
 - **Notes**: {any context from the conversation}
 ```
 
-**Rules for API keys**:
+**Scope detection — global vs project**:
+When the user shares a key, determine where to save it:
+
+1. **Auto-detect as PROJECT key** (save silently) when:
+   - The user explicitly says "for this project" or mentions the project name
+   - The key is shared while working on project-specific code
+   - The key is clearly environment-specific (e.g., "here's my staging key")
+
+2. **Auto-detect as GLOBAL key** (save silently) when:
+   - The user explicitly says "use this for all projects" or "global"
+   - It's a general-purpose key not tied to any project (e.g., a personal OpenAI key)
+
+3. **ASK the user** when scope is ambiguous:
+   - Say: "Is this [service] key just for this project ({project-name}), or should I save it globally for all projects?"
+   - Then save to the appropriate `_KEYS.md` based on their answer
+
+**Other key rules**:
 - Each project has its OWN `_KEYS.md` — the same service CAN have different keys per project
 - When looking up a key: check project `_KEYS.md` first, then global `_KEYS.md`
-- If the user says "use this for all projects", save to global `_KEYS.md`
 - If a key already exists for that service in this project, UPDATE it (don't duplicate)
-- Briefly confirm: "Saved your [service] key to Obsidian."
+- Briefly confirm: "Saved your [service] key to Obsidian ({scope})."
 
 ## 3. AUTO-SAVE PREFERENCES: Whenever the User Corrects or Instructs
 
