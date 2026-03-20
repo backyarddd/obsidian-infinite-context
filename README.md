@@ -1,4 +1,4 @@
-# Obsidian Infinite Context for Claude Code
+# Claude Code Infinite Context (ft. Obsidian)
 
 > Never lose context again. Give Claude Code a permanent, fully automatic memory backed by your Obsidian vault.
 
