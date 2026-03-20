@@ -249,6 +249,7 @@ You can still invoke the skill manually if needed:
 | `/obsidian-scan` | Deep-scan current project and build memory from scratch |
 | `/obsidian-rollback` | Undo the last major memory change |
 | `/obsidian-status` | Show overview of all projects and memory stats |
+| `/obsidian-update` | Check for updates and install the latest version |
 
 ### Project Scanning
 
@@ -351,6 +352,8 @@ obsidian-infinite-context/
 │   │   └── SKILL.md            # Delete specific memories
 │   ├── obsidian-scan/
 │   │   └── SKILL.md            # Onboard existing projects
+│   ├── obsidian-update/
+│   │   └── SKILL.md            # Self-update to latest version
 │   ├── obsidian-rollback/
 │   │   └── SKILL.md            # Undo memory changes
 │   └── obsidian-status/
